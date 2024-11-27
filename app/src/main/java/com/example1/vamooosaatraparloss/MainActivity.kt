@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -83,7 +86,12 @@ fun PokemonApp(
         regions = regionDriverAdapter.fetchRegions()
     }
 
-    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+    ) {
         if (selectedRegion == null) {
             // Mostrar regiones
             Text(
@@ -109,6 +117,10 @@ fun PokemonApp(
         } else {
             // Mostrar Pokémon y botón para regresar
             Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 onClick = { selectedRegion = null },
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
@@ -154,18 +166,20 @@ fun RegionList(regions: List<Region>, onRegionSelected: (Region) -> Unit) {
 @Composable
 fun RegionItem(region: Region, onClick: () -> Unit) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 8.dp)
     ) {
         Text(
-            text = region.name, // Muestra solo el nombre de la región
+            text = region.name,
             modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSecondary)
         )
     }
 }
+
 
 
 
@@ -188,18 +202,20 @@ fun PokemonList(pokemons: List<Pokemon>, onPokemonClick: (String) -> Unit) {
 @Composable
 fun PokemonItem(pokemon: Pokemon, onClick: () -> Unit) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 8.dp)
     ) {
         Text(
-            text = pokemon.name,
+            text = pokemon.name.capitalize(),
             modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onPrimary)
         )
     }
 }
+
 
 
 @Composable

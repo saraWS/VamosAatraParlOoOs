@@ -181,6 +181,7 @@ fun RegionList(regions: List<Region>, onRegionSelected: (Region) -> Unit) {
 fun RegionItem(region: Region, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
@@ -216,7 +217,8 @@ fun PokemonList(pokemons: List<Pokemon>, onPokemonClick: (String) -> Unit) {
 @Composable
 fun PokemonItem(pokemon: Pokemon, onClick: () -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
@@ -225,7 +227,7 @@ fun PokemonItem(pokemon: Pokemon, onClick: () -> Unit) {
         Text(
             text = pokemon.name.capitalize(),
             modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onPrimary)
+            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSecondary)
         )
     }
 }

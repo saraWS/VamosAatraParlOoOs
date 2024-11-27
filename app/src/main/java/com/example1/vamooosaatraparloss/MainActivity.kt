@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,8 +35,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
@@ -80,6 +84,8 @@ fun PokemonApp(
     var pokemons by remember { mutableStateOf<List<Pokemon>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var regions by remember { mutableStateOf<List<Region>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") } // Estado del término de búsqueda
+    var filteredPokemons by remember { mutableStateOf<List<Pokemon>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -93,27 +99,68 @@ fun PokemonApp(
             .padding(16.dp)
     ) {
         if (selectedRegion == null) {
-            // Mostrar regiones
+            // Encabezado principal
             Text(
-                text = "Selecciona una región para ver los Pokémon:",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                text = "Pokédex",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.primary
             )
 
-            RegionList(regions = regions, onRegionSelected = { region ->
-                selectedRegion = region
-                isLoading = true
-                coroutineScope.launch {
-                    try {
-                        pokemons = pokemonDriverAdapter.fetchPokemonByRegion(region.id.toString())
-                    } catch (e: Exception) {
-                        pokemons = emptyList()
-                    } finally {
-                        isLoading = false
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Busca Pokémon por nombre o selecciona una región:",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo de texto para buscar Pokémon
+            TextField(
+                value = searchQuery,
+                onValueChange = { query ->
+                    searchQuery = query
+                    filteredPokemons = pokemons.filter { it.name.contains(query, ignoreCase = true) }
+                },
+                placeholder = {
+                    Text("Buscar Pokémon...")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
+
+            // Mostrar Pokémon filtrados si hay un término de búsqueda
+            if (searchQuery.isNotBlank()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(filteredPokemons) { pokemon ->
+                        PokemonItem(pokemon = pokemon, onClick = { onPokemonClick(pokemon.name) })
                     }
                 }
-
-            })
+            } else {
+                Spacer(modifier = Modifier.height(16.dp))
+                // Mostrar lista de regiones si no hay búsqueda activa
+                RegionList(regions = regions, onRegionSelected = { region ->
+                    selectedRegion = region
+                    isLoading = true
+                    coroutineScope.launch {
+                        try {
+                            pokemons = pokemonDriverAdapter.fetchPokemonByRegion(region.id.toString())
+                            filteredPokemons = pokemons
+                        } catch (e: Exception) {
+                            pokemons = emptyList()
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                })
+            }
         } else {
             // Mostrar Pokémon y botón para regresar
             Button(
@@ -167,6 +214,7 @@ fun RegionList(regions: List<Region>, onRegionSelected: (Region) -> Unit) {
 fun RegionItem(region: Region, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
@@ -202,8 +250,8 @@ fun PokemonList(pokemons: List<Pokemon>, onPokemonClick: (String) -> Unit) {
 @Composable
 fun PokemonItem(pokemon: Pokemon, onClick: () -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-        modifier = Modifier
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),        modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 8.dp)

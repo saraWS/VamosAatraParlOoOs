@@ -1,3 +1,4 @@
+
 package com.example1.vamooosaatraparloss
 
 import android.os.Bundle
@@ -6,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -84,8 +83,6 @@ fun PokemonApp(
     var pokemons by remember { mutableStateOf<List<Pokemon>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var regions by remember { mutableStateOf<List<Region>>(emptyList()) }
-    var searchQuery by remember { mutableStateOf("") } // Estado del término de búsqueda
-    var filteredPokemons by remember { mutableStateOf<List<Pokemon>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -97,9 +94,10 @@ fun PokemonApp(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
+
     ) {
         if (selectedRegion == null) {
-            // Encabezado principal
+            // Mostrar regiones
             Text(
                 text = "Pokédex",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -111,56 +109,25 @@ fun PokemonApp(
 
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Busca Pokémon por nombre o selecciona una región:",
+                text = "Selecciona una región para ver los Pokémon:",
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                 color = MaterialTheme.colorScheme.onBackground
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Campo de texto para buscar Pokémon
-            TextField(
-                value = searchQuery,
-                onValueChange = { query ->
-                    searchQuery = query
-                    filteredPokemons = pokemons.filter { it.name.contains(query, ignoreCase = true) }
-                },
-                placeholder = {
-                    Text("Buscar Pokémon...")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-
-            // Mostrar Pokémon filtrados si hay un término de búsqueda
-            if (searchQuery.isNotBlank()) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(filteredPokemons) { pokemon ->
-                        PokemonItem(pokemon = pokemon, onClick = { onPokemonClick(pokemon.name) })
+            Spacer(modifier = Modifier.height(32.dp))
+            RegionList(regions = regions, onRegionSelected = { region ->
+                selectedRegion = region
+                isLoading = true
+                coroutineScope.launch {
+                    try {
+                        pokemons = pokemonDriverAdapter.fetchPokemonByRegion(region.id.toString())
+                    } catch (e: Exception) {
+                        pokemons = emptyList()
+                    } finally {
+                        isLoading = false
                     }
                 }
-            } else {
-                Spacer(modifier = Modifier.height(16.dp))
-                // Mostrar lista de regiones si no hay búsqueda activa
-                RegionList(regions = regions, onRegionSelected = { region ->
-                    selectedRegion = region
-                    isLoading = true
-                    coroutineScope.launch {
-                        try {
-                            pokemons = pokemonDriverAdapter.fetchPokemonByRegion(region.id.toString())
-                            filteredPokemons = pokemons
-                        } catch (e: Exception) {
-                            pokemons = emptyList()
-                        } finally {
-                            isLoading = false
-                        }
-                    }
-                })
-            }
+
+            })
         } else {
             // Mostrar Pokémon y botón para regresar
             Button(
@@ -214,7 +181,6 @@ fun RegionList(regions: List<Region>, onRegionSelected: (Region) -> Unit) {
 fun RegionItem(region: Region, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
-        elevation = CardDefaults.elevatedCardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
@@ -250,8 +216,8 @@ fun PokemonList(pokemons: List<Pokemon>, onPokemonClick: (String) -> Unit) {
 @Composable
 fun PokemonItem(pokemon: Pokemon, onClick: () -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
-        elevation = CardDefaults.elevatedCardElevation(4.dp),        modifier = Modifier
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 8.dp)
